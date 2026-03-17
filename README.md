@@ -1,1 +1,1 @@
-# AI---proctoring---system
+# AI-proctoring-system
