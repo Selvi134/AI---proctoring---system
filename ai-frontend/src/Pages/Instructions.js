@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import ExamCamera from "../Components/ExamCamera";
 import "../styles/instruction.css";
 // import Navbar from "../Components/Navbar";  
 
 function Instructions() {
 
+  const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState(60);
   const [enableButton, setEnableButton] = useState(false);
 
@@ -73,6 +75,7 @@ function Instructions() {
             <button
               className="btn btn-primary"
               disabled={!enableButton}
+              onClick={() => navigate("/take-exam")}
             >
               Start Exam
             </button>

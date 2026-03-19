@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+venv310/
+
+# Model files
+*.pt
+
+# Images
+student_images/
+
+# Node
+node_modules/
+
+# Env files
+.env
+
+# OS files
+.DS_Store
+Thumbs.db

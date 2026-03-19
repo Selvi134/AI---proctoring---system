@@ -7,6 +7,7 @@ import { generateStudentId } from "../utils/generateStudentId";
 function Signup() {
 
   const [role, setRole] = useState("");
+  const [capturedImage, setCapturedImage] = useState("");
 
   const navigate = useNavigate();   // ADDED
 
@@ -14,15 +15,11 @@ function Signup() {
   const handleSignup = (e) => {
     e.preventDefault();
 
-    // ADDED: check if account already exists
-    const existingAccount = localStorage.getItem("studentAccount");
-    if(existingAccount){
-      alert("Account already exists. Please login.");
-      navigate("/student-login");
-      return;
-    }
-
     if(role === "student"){
+      if (!capturedImage) {
+        alert("Please wait for your face to be captured.");
+        return;
+      }
 
       const studentId = generateStudentId();
 
@@ -30,12 +27,14 @@ function Signup() {
       const emailValue = document.querySelector('input[type="email"]').value;
       const passwordValue = document.querySelector('input[type="password"]').value;
       const nameValue = document.querySelector('input[type="text"]').value;
+      const examCodeValue = document.querySelector('input[placeholder="Exam Code"]').value;
 
       // ADDED: save account locally
       localStorage.setItem("studentAccount", JSON.stringify({
         studentId: studentId,
         email: emailValue,
-        password: passwordValue
+        password: passwordValue,
+        exam_code: examCodeValue
       }));
 
       // ADDED: store studentId for instruction page
@@ -50,7 +49,7 @@ function Signup() {
       // ------------------------------
       // NEW: SAVE DATA IN BACKEND
       // ------------------------------
-      fetch("http://127.0.0.1:8000/signup", {
+      fetch("http://localhost:8000/signup", {
 
         method: "POST",
 
@@ -62,7 +61,9 @@ function Signup() {
           name: nameValue,
           email: emailValue,
           student_id: studentId,
-          password: passwordValue
+          password: passwordValue,
+          image: capturedImage,
+          exam_code: examCodeValue
         })
 
       })
@@ -75,7 +76,7 @@ function Signup() {
       });
 
       // ADDED EMAIL API CALL
-      fetch("http://127.0.0.1:8000/send-student-id", {
+      fetch("http://localhost:8000/send-student-id", {
 
         method: "POST",
 
@@ -93,10 +94,39 @@ function Signup() {
       // ADDED: navigate to instruction page
       navigate("/instructions");
 
-    } else {
+    } else if (role === "admin") {
+      const emailValue = document.querySelector('input[type="email"]').value;
+      const passwordValue = document.querySelector('input[type="password"]').value;
+      const nameValue = document.querySelector('input[type="text"]').value;
 
-      alert("Admin Signup Successful");
-
+      fetch("http://localhost:8000/admin-signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: nameValue,
+          email: emailValue,
+          password: passwordValue
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.admin_id) {
+            alert(
+              "Admin Signup Successful!\n\nYour Admin ID: " +
+              data.admin_id +
+              "\n\nPlease use this ID to login."
+            );
+            navigate("/admin-login");
+        } else {
+            alert("Error: " + data.detail);
+        }
+      })
+      .catch(err => {
+        console.error("Admin Signup API error", err);
+        alert("Failed to sign up admin");
+      });
     }
   };
 
@@ -135,6 +165,11 @@ function Signup() {
               </div>
 
               <div className="mb-3">
+                <label className="form-label">Exam Code</label>
+                <input type="text" className="form-control" placeholder="Exam Code"/>
+              </div>
+
+              <div className="mb-3">
                 <label className="form-label">Confirm Password</label>
                 <input type="password" className="form-control"/>
               </div>
@@ -152,7 +187,7 @@ function Signup() {
                 </select>
               </div>
 
-              {role === "student" && <StudentFaceCamera />}
+              {role === "student" && <StudentFaceCamera onCapture={setCapturedImage} />}
 
               <button className="btn btn-primary">
                 Sign Up

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as faceapi from "face-api.js";
 
-function StudentFaceCamera() {
+function StudentFaceCamera({ onCapture }) {
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -42,6 +42,11 @@ function StudentFaceCamera() {
       canvas.height = videoRef.current.videoHeight;
 
       ctx.drawImage(videoRef.current, 0, 0);
+      
+      const imgData = canvas.toDataURL("image/jpeg");
+      if(onCapture) {
+        onCapture(imgData);
+      }
 
       setCaptured(true);
 

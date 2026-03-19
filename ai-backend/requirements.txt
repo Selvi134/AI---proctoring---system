@@ -7,3 +7,5 @@ opencv-python
 deepface
 numpy
 python-multipart
+mediapipe
+ultralytics

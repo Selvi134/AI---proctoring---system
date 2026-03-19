@@ -9,6 +9,10 @@ import Login from "./Pages/Login";
 import Signup from "./Pages/Signup";
 import StudentLogin from "./Pages/StudentLogin";
 import AdminLogin from "./Pages/AdminLogin";
+import AdminDashboard from "./Pages/AdminDashboard";
+import TakeExam from "./Pages/TakeExam";
+import AdminResults from "./Pages/AdminResults";
+import StudentResult from "./Pages/StudentResult";
 
 function App() {
   return (
@@ -20,7 +24,11 @@ function App() {
       <Route path="/signup" element={<Signup />} />
       <Route path="/student-login" element={<StudentLogin />} />
       <Route path="/admin-login" element={<AdminLogin />} />
+      <Route path="/admin-dashboard" element={<AdminDashboard />} />
+      <Route path="/take-exam" element={<TakeExam />} />
+      <Route path="/admin-results" element={<AdminResults />} />
       <Route path="/instructions" element={<Instructions />} />
+      <Route path="/student-result" element={<StudentResult />} />
     </Routes>
   );
 }

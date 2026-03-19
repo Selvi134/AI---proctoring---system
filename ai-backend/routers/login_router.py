@@ -26,7 +26,7 @@ def login(data: dict, db: Session = Depends(get_db)):
 
     student_id = data["student_id"]
     password = data["password"]
-    image = data["image"]
+    exam_code = data["exam_code"]
 
     student = db.query(Student).filter(
         Student.student_id == student_id
@@ -37,36 +37,9 @@ def login(data: dict, db: Session = Depends(get_db)):
         return {"status": "student_not_found"}
 
     if student.password != password:
-
         return {"status": "wrong_password"}
 
-    login_image_path = f"{IMAGE_FOLDER}/login_{uuid.uuid4()}.jpg"
+    student.exam_code = exam_code
+    db.commit()
 
-    img_data = base64.b64decode(image.split(",")[1])
-
-    with open(login_image_path, "wb") as f:
-        f.write(img_data)
-
-    try:
-
-        result = DeepFace.verify(
-            img1_path=student.image_path,
-            img2_path=login_image_path,
-            enforce_detection=False
-        )
-
-        os.remove(login_image_path)
-
-        if result["verified"]:
-
-            return {"status": "success"}
-
-        else:
-
-            return {"status": "face_not_match"}
-
-    except:
-
-        os.remove(login_image_path)
-
-        return {"status": "face_error"}
+    return {"status": "success"}

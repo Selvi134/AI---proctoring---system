@@ -6,7 +6,7 @@ function AdminLogin() {
 
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const [adminId, setAdminId] = useState("");
   const [password, setPassword] = useState("");
 
   // ADDED LOGIN FUNCTION
@@ -14,7 +14,7 @@ function AdminLogin() {
 
     e.preventDefault();
 
-    fetch("http://127.0.0.1:8000/admin-login", {
+    fetch("http://localhost:8000/admin-login", {
 
       method: "POST",
 
@@ -23,7 +23,7 @@ function AdminLogin() {
       },
 
       body: JSON.stringify({
-        email: email,
+        admin_id: adminId,
         password: password
       })
 
@@ -40,13 +40,13 @@ function AdminLogin() {
     .then(data => {
 
       alert("Admin Login Successful");
-
+      localStorage.setItem("adminId", adminId);
       navigate("/admin-dashboard");
 
     })
     .catch(err => {
 
-      alert("Invalid Admin Email or Password");
+      alert("Invalid Admin ID or Password");
 
     });
 
@@ -74,14 +74,14 @@ function AdminLogin() {
               <div className="mb-3">
 
                 <label className="form-label">
-                  Admin Email
+                  Admin ID
                 </label>
 
                 <input
-                  type="email"
+                  type="text"
                   className="form-control"
-                  value={email}
-                  onChange={(e)=>setEmail(e.target.value)}
+                  value={adminId}
+                  onChange={(e)=>setAdminId(e.target.value)}
                 />
 
               </div>

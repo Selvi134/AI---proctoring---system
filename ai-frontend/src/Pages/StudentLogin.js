@@ -5,21 +5,19 @@ import StudentFaceCamera from "../Components/StudentFaceCamera";
 
 function StudentLogin() {
 
-  const navigate = useNavigate();                 
-  const [studentId, setStudentId] = useState(""); 
-  const [password, setPassword] = useState("");   
+  const navigate = useNavigate();
+  const [studentId, setStudentId] = useState("");
+  const [password, setPassword] = useState("");
+  const [examCode, setExamCode] = useState("");
 
   // ADDED FUNCTION
   const handleLogin = (e) => {
     e.preventDefault();
 
-    // ADDED: get stored account
-    const storedAccount = JSON.parse(localStorage.getItem("studentAccount"));
-
     // --------------------------------------
     // NEW: CHECK LOGIN FROM BACKEND DATABASE
     // --------------------------------------
-    fetch("http://127.0.0.1:8000/student-login", {
+    fetch("http://localhost:8000/login", {
 
       method: "POST",
 
@@ -29,54 +27,43 @@ function StudentLogin() {
 
       body: JSON.stringify({
         student_id: studentId,
-        password: password
+        password: password,
+        exam_code: examCode.trim()
       })
 
     })
     .then(res => {
-
-      if(!res.ok){
-        throw new Error("Invalid login");
+      if (!res.ok) {
+        return res.text().then(text => {
+          throw new Error(`Server error: ${res.status} ${text}`);
+        });
       }
-
       return res.json();
-
     })
     .then(data => {
-
-      // store student id
-      localStorage.setItem("studentId", studentId);
-
-      // redirect to instruction page
-      navigate("/instructions");
+      
+      if (data.status === "success") {
+        // store student id
+        localStorage.setItem("studentId", studentId);
+        localStorage.setItem("examCode", examCode);
+        // redirect to instruction page
+        navigate("/instructions");
+      } else if (data.status === "student_not_found") {
+        alert("Student Not Found");
+      } else if (data.status === "wrong_password") {
+        alert("Wrong Password");
+      } else if (data.status === "face_not_match") {
+        alert("Face Does Not Match");
+      } else if (data.status === "face_error") {
+        alert("Error analyzing face");
+      } else {
+        alert("Invalid login details");
+      }
 
     })
     .catch(err => {
-
-      // fallback to your existing localStorage logic
-
-      if(!storedAccount){
-        alert("Account not found. Please Sign Up.");
-        navigate("/signup");
-        return;
-      }
-
-      // ADDED: check student id and password
-      if(studentId === storedAccount.studentId && password === storedAccount.password){
-
-        // store student id
-        localStorage.setItem("studentId", studentId);
-
-        // redirect to instruction page
-        navigate("/instructions");
-
-      }else{
-
-        alert("Invalid Student ID or Password. Please Sign Up.");
-        navigate("/signup");
-
-      }
-
+      console.error("Login component error:", err);
+      alert("Error connecting to server for login. Please ensure the backend is running.");
     });
 
   };
@@ -126,7 +113,20 @@ function StudentLogin() {
                 />
               </div>
 
-              <StudentFaceCamera />
+
+              <div className="mb-3">
+                <label className="form-label">
+                  Exam Code
+                </label>
+
+                <input
+                  type="text"
+                  className="form-control"
+                  value={examCode}
+                  onChange={(e) => setExamCode(e.target.value)}
+                  placeholder="Enter Exam Code"
+                />
+              </div>
 
               <button className="btn btn-primary">
                 Login
