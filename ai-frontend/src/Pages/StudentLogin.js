@@ -56,6 +56,8 @@ function StudentLogin() {
         alert("Face Does Not Match");
       } else if (data.status === "face_error") {
         alert("Error analyzing face");
+      } else if (data.status === "invalid_exam_code") {
+        alert("Invalid Exam Code. Please check the code and try again.");
       } else {
         alert("Invalid login details");
       }

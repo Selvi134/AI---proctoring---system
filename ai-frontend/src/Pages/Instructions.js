@@ -7,7 +7,7 @@ import "../styles/instruction.css";
 function Instructions() {
 
   const navigate = useNavigate();
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(30);
   const [enableButton, setEnableButton] = useState(false);
 
   const studentId = localStorage.getItem("studentId") || "STU-XXXX";

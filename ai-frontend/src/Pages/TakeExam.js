@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ExamCamera from "../Components/ExamCamera";
 
@@ -13,9 +13,87 @@ function TakeExam() {
   // Proctoring State
   const [trustScore, setTrustScore] = useState(100);
   const [reasons, setReasons] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const studentId = localStorage.getItem("studentId");
   const examCode = localStorage.getItem("examCode");
+  const tabSwitchTimer = useRef(null);
+
+  useEffect(() => {
+    const handleCopy = (e) => {
+      fetch("http://localhost:8000/proctor/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ student_id: studentId, event: "copy" })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "success") {
+            setTrustScore(data.trust_score);
+            setReasons(prev => {
+                if (!prev.includes(data.reason)) return [...prev, data.reason];
+                return prev;
+            });
+        }
+      });
+    };
+
+    const handlePaste = (e) => {
+      fetch("http://localhost:8000/proctor/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ student_id: studentId, event: "paste" })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "success") {
+            setTrustScore(data.trust_score);
+            setReasons(prev => {
+                if (!prev.includes(data.reason)) return [...prev, data.reason];
+                return prev;
+            });
+        }
+      });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        tabSwitchTimer.current = setTimeout(() => {
+          fetch("http://localhost:8000/proctor/event", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ student_id: studentId, event: "tab_switch" })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === "success") {
+                setTrustScore(data.trust_score);
+                setReasons(prev => {
+                    if (!prev.includes(data.reason)) return [...prev, data.reason];
+                    return prev;
+                });
+            }
+          });
+        }, 4000);
+      } else {
+        if (tabSwitchTimer.current) {
+          clearTimeout(tabSwitchTimer.current);
+          tabSwitchTimer.current = null;
+        }
+      }
+    };
+
+    window.addEventListener("copy", handleCopy);
+    window.addEventListener("paste", handlePaste);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("copy", handleCopy);
+      window.removeEventListener("paste", handlePaste);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (tabSwitchTimer.current) clearTimeout(tabSwitchTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!studentId || !examCode) {
@@ -94,6 +172,8 @@ function TakeExam() {
       }
     });
 
+    setIsSubmitting(true);
+
     fetch("http://localhost:8000/results?student_id=" + studentId, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -115,7 +195,10 @@ function TakeExam() {
         }));
         navigate("/student-result");
       })
-      .catch(err => alert("Error submitting results"));
+      .catch(err => {
+        alert("Error submitting results");
+        setIsSubmitting(false);
+      });
   };
 
   if (loading) return <div className="text-center mt-5"><h3>Loading Exam...</h3></div>;
@@ -178,14 +261,21 @@ function TakeExam() {
             ))}
             
             <div className="text-center mb-5">
-              <button type="submit" className="btn btn-primary btn-lg px-5 shadow">Submit Final Exam</button>
+              {isSubmitting ? (
+                <div className="alert alert-info shadow-sm d-inline-block px-5">
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Submitting your exam, please wait...
+                </div>
+              ) : (
+                <button type="submit" className="btn btn-primary btn-lg px-5 shadow">Submit Final Exam</button>
+              )}
             </div>
           </form>
         </div>
         
         <div className="col-md-3">
           <div className="sticky-top" style={{ top: "100px" }}>
-            <ExamCamera studentId={studentId} onProctorUpdate={handleProctorUpdate} />
+            {!isSubmitting && <ExamCamera studentId={studentId} onProctorUpdate={handleProctorUpdate} />}
             
             <div className="card p-3 shadow-sm border-0 bg-light">
                 <h6 className="border-bottom pb-2">Monitoring Alerts</h6>

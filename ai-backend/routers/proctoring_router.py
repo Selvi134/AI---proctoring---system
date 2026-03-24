@@ -49,6 +49,22 @@ async def analyze_proctor_frame(data: dict):
         print(f"DEBUG: Proctoring Error: {e}")
         return {"suspicious": False, "reasons": [], "trust_score": 100}
 
+@router.post("/proctor/event")
+async def report_proctor_event(data: dict):
+    student_id = data.get("student_id")
+    event_type = data.get("event")
+
+    if not student_id or not event_type:
+        raise HTTPException(status_code=400, detail="Missing student_id or event")
+
+    if student_id not in proctor_sessions:
+        # If session doesn't exist, we can't report an event to it
+        # In a real app, this might happen if the camera isn't started yet
+        proctor_sessions[student_id] = ProctoringManager()
+
+    result = proctor_sessions[student_id].report_event(event_type)
+    return result
+
 @router.delete("/proctor/session/{student_id}")
 async def end_proctor_session(student_id: str):
     if student_id in proctor_sessions:

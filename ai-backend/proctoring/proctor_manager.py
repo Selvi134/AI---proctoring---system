@@ -83,3 +83,23 @@ class ProctoringManager:
             "reasons": reasons,
             "trust_score": self.trust_system.get_trust_percentage()
         }
+
+    def report_event(self, event_type: str):
+        """
+        Reports non-visual events like Ctrl+C, Ctrl+V, or Tab Switching.
+        """
+        event_map = {
+            "copy": {"reason": "Copy (Ctrl+C) attempt detected", "points": 5},
+            "paste": {"reason": "Paste (Ctrl+V) attempt detected", "points": 5},
+            "tab_switch": {"reason": "Tab switch violation (away for > 4s)", "points": 5}
+        }
+
+        if event_type in event_map:
+            data = event_map[event_type]
+            self.trust_system.add_event(data["reason"], data["points"])
+            return {
+                "status": "success",
+                "reason": data["reason"],
+                "trust_score": self.trust_system.get_trust_percentage()
+            }
+        return {"status": "ignored", "message": f"Unknown event type: {event_type}"}
